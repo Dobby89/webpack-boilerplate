@@ -1,9 +1,18 @@
 const path = require('path');
+const fs = require('fs');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const WebpackOnBuildPlugin = require('on-build-webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const IconfontWebpackPlugin = require('iconfont-webpack-plugin');
+
+const iconScss = fs.readdirSync(path.join(__dirname, './src/icons'))
+	.reduce((files, file) => {
+		const fileName = path.basename(file, path.extname(file))
+
+		return files.concat(`.icon-${fileName} { &::before { font-icon: url('../icons/${fileName}.svg'); } }`);
+	}, '');
 
 module.exports = {
 	devtool: 'source-map',
@@ -43,11 +52,17 @@ module.exports = {
 					},
 					{
 						loader: 'postcss-loader',
-						options: {}
+						options: {
+							plugins: (loader) => [
+							  new IconfontWebpackPlugin(loader)
+							]
+						}
 					},
 					{
 						loader: 'sass-loader',
 						options: {
+							// Inject
+							data: iconScss,
 							sourceMap: true
 						}
 					}
@@ -66,7 +81,7 @@ module.exports = {
 		new MiniCssExtractPlugin({
 			filename: 'styles/[name].bundle.css'
 		}),
-		new WebpackOnBuildPlugin(function() {
+		new WebpackOnBuildPlugin(() => {
 			// Do stuff after webpack has finished
 		}),
 		new OptimizeCssAssetsPlugin({

@@ -1,7 +1,19 @@
 .foo {
-    color: red;
+	color: red;
 
-    .bar {
-        color: green;
-    }
+	.bar {
+		color: green;
+	}
 }
+
+// .icon-info {
+// 	&::before {
+// 		font-icon: url('../icons/info.svg');
+// 	}
+// }
+
+// .icon-quote {
+// 	&::before {
+// 		font-icon: url('../icons/quote.svg');
+// 	}
+// }
