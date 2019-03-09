@@ -1,4 +1,4 @@
-import { foo } from './foo';
+import { foo } from './utils/index';
 
 const bar = () => console.log(foo);
 
