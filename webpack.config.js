@@ -1,18 +1,15 @@
 const path = require('path');
 const fs = require('fs');
+const glob = require('glob');
+const rimraf = require('rimraf');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const WebpackOnBuildPlugin = require('on-build-webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const IconfontWebpackPlugin = require('iconfont-webpack-plugin');
-
-const iconScss = fs.readdirSync(path.join(__dirname, './src/icons'))
-	.reduce((files, file) => {
-		const fileName = path.basename(file, path.extname(file))
-
-		return files.concat(`.icon-${fileName} { &::before { font-icon: url('../icons/${fileName}.svg'); } }`);
-	}, '');
+// const IconfontWebpackPlugin = require('iconfont-webpack-plugin');
+const IconfontPlugin = require('iconfont-plugin-webpack');
+const SpriteLoaderPlugin = require('svg-sprite-loader/plugin');
 
 module.exports = {
 	devtool: 'source-map',
@@ -20,7 +17,8 @@ module.exports = {
 		main: [
 			'./src/scripts/index.js',
 			'./src/styles/index.scss'
-		]
+		],
+		sprite: glob.sync(path.resolve(__dirname, 'src/icons/**/*.svg'))
 	},
 	output: {
 		path: path.resolve(__dirname, 'dist'),
@@ -39,41 +37,38 @@ module.exports = {
 				loader: 'babel-loader'
 			},
 			{
-				test: /\.scss$/,
+				test: /\.(sa|sc|c)ss$/,
 				exclude: /node_modules/,
 				use: [
 					MiniCssExtractPlugin.loader,
 					{
 						loader: 'css-loader',
 						options: {
-							importLoaders: 2,
 							sourceMap: true
 						}
 					},
 					{
-						loader: 'postcss-loader',
-						options: {
-							plugins: (loader) => [
-							  new IconfontWebpackPlugin(loader)
-							]
-						}
+						loader: 'postcss-loader'
 					},
 					{
 						loader: 'sass-loader',
 						options: {
-							// Inject
-							data: iconScss,
 							sourceMap: true
 						}
 					}
 				]
 			},
 			{
-				test: /\.svg/,
-				use: {
-					loader: 'svg-url-loader',
-					options: {}
-				}
+				test: /\.(svg|eot|ttf|woff|woff2)$/,
+				use: [
+					{
+						loader: 'url-loader',
+						options: {
+							limit: 8192,
+							outputPath: 'fonts/'
+						}
+					}
+				]
 			}
 		]
 	},
@@ -84,14 +79,14 @@ module.exports = {
 		new WebpackOnBuildPlugin(() => {
 			// Do stuff after webpack has finished
 		}),
-		new OptimizeCssAssetsPlugin({
-			cssProcessorOptions: {
-				map: {
-					inline: false,
-					annotation: true
-				}
-			}
-		}),
+		// new OptimizeCssAssetsPlugin({
+		// 	cssProcessorOptions: {
+		// 		map: {
+		// 			inline: false,
+		// 			annotation: true
+		// 		}
+		// 	}
+		// }),
 		new CopyWebpackPlugin([{
 			from: 'src/images',
 			to: 'images'
@@ -99,6 +94,19 @@ module.exports = {
 		]),
 		new HtmlWebpackPlugin({
 			template: 'src/index.html'
+		}),
+		new IconfontPlugin({
+			src: './src/icons', // required - directory where your .svg files are located
+			family: 'custom', // optional - the `font-family` name. if multiple iconfonts are generated, the dir names will be used.
+			dest: {
+				font: './dist/fonts/[family].[type]', // required - paths of generated font files
+				css: './src/styles/_iconfont-[family].scss' // required - paths of generated css files
+			},
+			watch: {
+				pattern: 'src/icons/**/*.svg', // required - watch these files to reload
+				cwd: undefined // optional - current working dir for watching
+			},
+			cssTemplate: require('./src/iconfontSassTemplate') // optional - the function to generate css contents
 		})
 	]
 };
