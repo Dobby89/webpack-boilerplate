@@ -69,6 +69,15 @@ module.exports = {
 						}
 					}
 				]
+			},
+			{
+				test: /\.svg$/,
+				loader: 'svg-sprite-loader',
+				include: path.resolve(__dirname, 'src/icons'),
+				options: {
+					extract: true,
+					spriteFilename: 'sprite.svg'
+				}
 			}
 		]
 	},
@@ -78,6 +87,7 @@ module.exports = {
 		}),
 		new WebpackOnBuildPlugin(() => {
 			// Do stuff after webpack has finished
+			rimraf('dist/scripts/*sprite*', () => {});
 		}),
 		// new OptimizeCssAssetsPlugin({
 		// 	cssProcessorOptions: {
@@ -107,6 +117,7 @@ module.exports = {
 				cwd: undefined // optional - current working dir for watching
 			},
 			cssTemplate: require('./src/iconfontSassTemplate') // optional - the function to generate css contents
-		})
+		}),
+		new SpriteLoaderPlugin()
 	]
 };
