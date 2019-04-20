@@ -1,5 +1,4 @@
 const path = require('path');
-const fs = require('fs');
 const glob = require('glob');
 const rimraf = require('rimraf');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -7,9 +6,8 @@ const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const WebpackOnBuildPlugin = require('on-build-webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-// const IconfontWebpackPlugin = require('iconfont-webpack-plugin');
 const IconfontPlugin = require('iconfont-plugin-webpack');
-const SpriteLoaderPlugin = require('svg-sprite-loader/plugin');
+const SvgSpriteHtmlWebpackPlugin = require('svg-sprite-html-webpack');
 
 module.exports = {
 	devtool: 'source-map',
@@ -72,12 +70,8 @@ module.exports = {
 			},
 			{
 				test: /\.svg$/,
-				loader: 'svg-sprite-loader',
-				include: path.resolve(__dirname, 'src/icons'),
-				options: {
-					extract: true,
-					spriteFilename: 'sprite.svg'
-				}
+				exclude: /node_modules/,
+				use: SvgSpriteHtmlWebpackPlugin.getLoader()
 			}
 		]
 	},
@@ -118,6 +112,10 @@ module.exports = {
 			},
 			cssTemplate: require('./src/iconfontSassTemplate') // optional - the function to generate css contents
 		}),
-		new SpriteLoaderPlugin()
+		new SvgSpriteHtmlWebpackPlugin({
+			includeFiles: [
+			  'src/icons/*.svg'
+			]
+		})
 	]
 };
